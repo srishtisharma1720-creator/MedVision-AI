@@ -1,10 +1,7 @@
 streamlit
 torch
 torchvision
-pillow
 pandas
-numpy
 plotly
-scikit-learn
-matplotlib
-seaborn
+pillow
+gdown
