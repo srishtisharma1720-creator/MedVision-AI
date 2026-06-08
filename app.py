@@ -36,13 +36,14 @@ if not os.path.exists(MODEL_PATH):
         gdown.download(url, MODEL_PATH, quiet=False)
 
 # =========================
-# MODEL ARCHITECTURE
+# MODEL ARCHITECTURE (FIXED)
+# MUST MATCH TRAINING MODEL
 # =========================
 class PneumoniaCNN(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.conv = nn.Sequential(
+        self.conv_layers = nn.Sequential(
             nn.Conv2d(3, 32, 3, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(2),
@@ -56,7 +57,7 @@ class PneumoniaCNN(nn.Module):
             nn.MaxPool2d(2)
         )
 
-        self.fc = nn.Sequential(
+        self.fc_layers = nn.Sequential(
             nn.Flatten(),
             nn.Linear(128 * 28 * 28, 256),
             nn.ReLU(),
@@ -65,15 +66,18 @@ class PneumoniaCNN(nn.Module):
         )
 
     def forward(self, x):
-        x = self.conv(x)
-        x = self.fc(x)
+        x = self.conv_layers(x)
+        x = self.fc_layers(x)
         return x
 
 # =========================
 # LOAD MODEL
 # =========================
 model = PneumoniaCNN()
-model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+
+state_dict = torch.load(MODEL_PATH, map_location=device)
+model.load_state_dict(state_dict)
+
 model.to(device)
 model.eval()
 
