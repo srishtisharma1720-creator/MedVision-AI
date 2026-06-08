@@ -1,7 +1,11 @@
 streamlit
 torch
 torchvision
-pandas
-plotly
 pillow
+pandas
+numpy
+plotly
+scikit-learn
+matplotlib
+seaborn
 gdown
