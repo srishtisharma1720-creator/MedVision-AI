@@ -19,6 +19,19 @@ st.set_page_config(
 )
 
 # =========================
+# SIDEBAR UI
+# =========================
+with st.sidebar:
+    st.title("🩺 MedVision AI")
+    st.write("Chest X-Ray Pneumonia Detection")
+    st.markdown("---")
+
+    st.info("Upload an X-ray image to get AI prediction.")
+    st.markdown("### Model Info")
+    st.write("CNN-based Deep Learning Model")
+    st.write("Classes: NORMAL | PNEUMONIA")
+
+# =========================
 # DEVICE
 # =========================
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -28,7 +41,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # =========================
 MODEL_PATH = "pneumonia_model.pth"
 file_id = "1V_FLHVkRt526jcSI42bdUG3ncsjmgVIj"
-
 url = f"https://drive.google.com/uc?export=download&id={file_id}"
 
 if not os.path.exists(MODEL_PATH):
@@ -36,8 +48,7 @@ if not os.path.exists(MODEL_PATH):
         gdown.download(url, MODEL_PATH, quiet=False)
 
 # =========================
-# MODEL ARCHITECTURE (FIXED)
-# MUST MATCH TRAINING MODEL
+# MODEL (FIXED ARCHITECTURE)
 # =========================
 class PneumoniaCNN(nn.Module):
     def __init__(self):
@@ -74,7 +85,6 @@ class PneumoniaCNN(nn.Module):
 # LOAD MODEL
 # =========================
 model = PneumoniaCNN()
-
 state_dict = torch.load(MODEL_PATH, map_location=device)
 model.load_state_dict(state_dict)
 
@@ -92,126 +102,85 @@ transform = transforms.Compose([
 classes = ["NORMAL", "PNEUMONIA"]
 
 # =========================
-# UI DESIGN
+# HERO SECTION
 # =========================
 st.markdown("""
-<style>
-.stApp {
-    background: linear-gradient(135deg,#0f172a,#1e293b);
-}
-
-.hero {
-    text-align:center;
-    padding:20px;
-}
-
-.hero h1 {
-    font-size:65px;
-    font-weight:900;
-    background: linear-gradient(90deg,#38bdf8,#818cf8,#c084fc);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-}
-
-.hero h3 {
-    color:#cbd5e1;
-}
-
-.pred-normal {
-    background: linear-gradient(90deg,#22c55e,#16a34a);
-    padding:20px;
-    border-radius:15px;
-    color:white;
-    font-size:32px;
-    font-weight:bold;
-    text-align:center;
-}
-
-.pred-pneumonia {
-    background: linear-gradient(90deg,#ef4444,#dc2626);
-    padding:20px;
-    border-radius:15px;
-    color:white;
-    font-size:32px;
-    font-weight:bold;
-    text-align:center;
-}
-
-.card {
-    background: rgba(255,255,255,0.08);
-    padding:15px;
-    border-radius:15px;
-    text-align:center;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# =========================
-# HERO
-# =========================
-st.markdown("""
-<div class="hero">
-<h1>🩺 MedVision AI</h1>
-<h3>Chest X-Ray Pneumonia Detection System</h3>
+<div style="text-align:center;">
+<h1 style="font-size:55px;
+background: linear-gradient(90deg,#38bdf8,#818cf8,#c084fc);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;">
+🩺 MedVision AI
+</h1>
+<h3 style="color:#cbd5e1;">AI-powered Chest X-Ray Pneumonia Detection</h3>
 </div>
 """, unsafe_allow_html=True)
 
+st.markdown("---")
+
 # =========================
-# UPLOAD IMAGE
+# MAIN LAYOUT (CENTERED)
 # =========================
-uploaded_file = st.file_uploader("Upload Chest X-Ray", type=["jpg", "png", "jpeg"])
+col1, col2, col3 = st.columns([1,2,1])
 
-if uploaded_file:
+with col2:
 
-    image = Image.open(uploaded_file).convert("RGB")
-    st.image(image, caption="Uploaded Image", use_container_width=True)
+    uploaded_file = st.file_uploader("Upload Chest X-Ray", type=["jpg", "png", "jpeg"])
 
-    img = transform(image).unsqueeze(0).to(device)
+    if uploaded_file:
 
-    with torch.no_grad():
-        output = model(img)
-        probs = torch.softmax(output, dim=1)[0]
-        confidence, pred = torch.max(probs, 0)
+        image = Image.open(uploaded_file).convert("RGB")
+        st.image(image, caption="Uploaded Image", use_container_width=True)
 
-    prediction = classes[pred.item()]
-    confidence_pct = confidence.item() * 100
+        img = transform(image).unsqueeze(0).to(device)
 
-    st.markdown("---")
+        with torch.no_grad():
+            output = model(img)
+            probs = torch.softmax(output, dim=1)[0]
+            confidence, pred = torch.max(probs, 0)
 
-    # RESULT
-    if prediction == "NORMAL":
-        st.markdown('<div class="pred-normal">✅ NORMAL</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="pred-pneumonia">⚠️ PNEUMONIA</div>', unsafe_allow_html=True)
+        prediction = classes[pred.item()]
+        confidence_pct = confidence.item() * 100
 
-    # CONFIDENCE GAUGE
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=confidence_pct,
-        title={"text": "Confidence"},
-        gauge={"axis": {"range": [0, 100]}}
-    ))
+        st.markdown("---")
 
-    st.plotly_chart(fig, use_container_width=True)
+        # RESULT UI
+        if prediction == "NORMAL":
+            st.success("✅ NORMAL")
+        else:
+            st.error("⚠️ PNEUMONIA DETECTED")
 
-    # PROBABILITY CHART
-    df = pd.DataFrame({
-        "Class": classes,
-        "Probability": [probs[0].item()*100, probs[1].item()*100]
-    })
+        # GAUGE
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=confidence_pct,
+            title={"text": "Confidence"},
+            gauge={"axis": {"range": [0, 100]}}
+        ))
+        st.plotly_chart(fig, use_container_width=True)
 
-    fig2 = px.bar(df, x="Class", y="Probability", text="Probability")
-    st.plotly_chart(fig2, use_container_width=True)
+        # BAR CHART
+        df = pd.DataFrame({
+            "Class": classes,
+            "Probability": [probs[0].item()*100, probs[1].item()*100]
+        })
 
-    # REPORT
-    st.markdown(f"""
-    <div class="card">
-    <h2>AI Report</h2>
-    <b>Diagnosis:</b> {prediction}<br>
-    <b>Confidence:</b> {confidence_pct:.2f}%<br>
-    <b>Note:</b> For educational use only
-    </div>
-    """, unsafe_allow_html=True)
+        fig2 = px.bar(df, x="Class", y="Probability", text="Probability")
+        st.plotly_chart(fig2, use_container_width=True)
+
+        # REPORT CARD
+        st.markdown(f"""
+        <div style="
+            background: rgba(255,255,255,0.08);
+            padding:20px;
+            border-radius:15px;
+            text-align:center;">
+            <h3>AI Report</h3>
+            <b>Diagnosis:</b> {prediction}<br>
+            <b>Confidence:</b> {confidence_pct:.2f}%<br>
+            <b>Note:</b> For educational use only
+        </div>
+        """, unsafe_allow_html=True)
 
 st.markdown("---")
 st.caption("Built with PyTorch + Streamlit + CNN")
