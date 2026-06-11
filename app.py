@@ -9,18 +9,14 @@ import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
 
-# =========================
-# PAGE CONFIG
-# =========================
+
 st.set_page_config(
     page_title="MedVision AI",
     page_icon="🩺",
     layout="wide"
 )
 
-# =========================
-# SIDEBAR UI
-# =========================
+
 with st.sidebar:
     st.title("🩺 MedVision AI")
     st.write("Chest X-Ray Pneumonia Detection")
@@ -31,14 +27,10 @@ with st.sidebar:
     st.write("CNN-based Deep Learning Model")
     st.write("Classes: NORMAL | PNEUMONIA")
 
-# =========================
-# DEVICE
-# =========================
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# =========================
-# MODEL DOWNLOAD
-# =========================
+
 MODEL_PATH = "pneumonia_model.pth"
 file_id = "1V_FLHVkRt526jcSI42bdUG3ncsjmgVIj"
 url = f"https://drive.google.com/uc?export=download&id={file_id}"
@@ -47,9 +39,7 @@ if not os.path.exists(MODEL_PATH):
     with st.spinner("Downloading model..."):
         gdown.download(url, MODEL_PATH, quiet=False)
 
-# =========================
-# MODEL (FIXED ARCHITECTURE)
-# =========================
+
 class PneumoniaCNN(nn.Module):
     def __init__(self):
         super().__init__()
@@ -81,9 +71,7 @@ class PneumoniaCNN(nn.Module):
         x = self.fc_layers(x)
         return x
 
-# =========================
-# LOAD MODEL
-# =========================
+
 model = PneumoniaCNN()
 state_dict = torch.load(MODEL_PATH, map_location=device)
 model.load_state_dict(state_dict)
@@ -91,9 +79,7 @@ model.load_state_dict(state_dict)
 model.to(device)
 model.eval()
 
-# =========================
-# TRANSFORM
-# =========================
+
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor()
@@ -101,9 +87,7 @@ transform = transforms.Compose([
 
 classes = ["NORMAL", "PNEUMONIA"]
 
-# =========================
-# HERO SECTION
-# =========================
+
 st.markdown("""
 <div style="text-align:center;">
 <h1 style="font-size:55px;
@@ -118,9 +102,6 @@ background: linear-gradient(90deg,#38bdf8,#818cf8,#c084fc);
 
 st.markdown("---")
 
-# =========================
-# MAIN LAYOUT (CENTERED)
-# =========================
 col1, col2, col3 = st.columns([1,2,1])
 
 with col2:
@@ -144,13 +125,13 @@ with col2:
 
         st.markdown("---")
 
-        # RESULT UI
+        
         if prediction == "NORMAL":
             st.success("✅ NORMAL")
         else:
             st.error("⚠️ PNEUMONIA DETECTED")
 
-        # GAUGE
+        
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=confidence_pct,
@@ -159,7 +140,7 @@ with col2:
         ))
         st.plotly_chart(fig, use_container_width=True)
 
-        # BAR CHART
+        
         df = pd.DataFrame({
             "Class": classes,
             "Probability": [probs[0].item()*100, probs[1].item()*100]
@@ -168,7 +149,7 @@ with col2:
         fig2 = px.bar(df, x="Class", y="Probability", text="Probability")
         st.plotly_chart(fig2, use_container_width=True)
 
-        # REPORT CARD
+        
         st.markdown(f"""
         <div style="
             background: rgba(255,255,255,0.08);
