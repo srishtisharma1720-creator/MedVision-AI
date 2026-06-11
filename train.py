@@ -5,28 +5,28 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
-# Device
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using:", device)
 
-# Dataset paths
+
 train_dir = "train"
 test_dir = "test"
 
-# Image transformations
+
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
 ])
 
-# Load datasets
+
 train_dataset = datasets.ImageFolder(train_dir, transform=transform)
 test_dataset = datasets.ImageFolder(test_dir, transform=transform)
 
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 
-# CNN Model
+
 class PneumoniaCNN(nn.Module):
     def __init__(self):
         super().__init__()
@@ -63,7 +63,7 @@ model = PneumoniaCNN().to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# Training
+
 epochs = 5
 
 for epoch in range(epochs):
